@@ -1,0 +1,10 @@
+{
+	"expo": {
+		"name": "movie-search-rn",
+		"slug": "movie-search-rn",
+		"version": "1.0.0",
+		"assetBundlePatterns": ["**/*"],
+		"plugins": ["expo-asset", "expo-font"]
+	},
+	"name": "movie-search-rn"
+}
