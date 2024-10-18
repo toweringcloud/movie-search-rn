@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Dimensions, RefreshControl } from "react-native";
+import {
+	ActivityIndicator,
+	Dimensions,
+	FlatList,
+	View,
+	Text,
+} from "react-native";
 import Swiper from "react-native-swiper";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import styled from "styled-components/native";
@@ -8,10 +14,7 @@ import HMedia from "../components/HMedia";
 import Slide from "../components/Slide";
 import VMedia from "../components/VMedia";
 
-// const API_KEY = "10923b261ba94d897ac6b81148314a3f";
 const API_KEY = process.env.API_KEY;
-
-const Container = styled.ScrollView``;
 
 const Loader = styled.View`
 	flex: 1;
@@ -28,7 +31,7 @@ const ListTitle = styled.Text`
 	margin-left: 30px;
 `;
 
-const TrendingScroll = styled.ScrollView`
+const TrendingScroll = styled.FlatList`
 	margin-top: 20px;
 `;
 
@@ -103,63 +106,73 @@ const Movies: React.FC<NativeStackScreenProps<any, "Movies">> = () => {
 			<ActivityIndicator />
 		</Loader>
 	) : (
-		<Container
-			refreshControl={
-				<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />
-			}
-		>
-			<Swiper
-				horizontal
-				loop
-				autoplay
-				autoplayTimeout={3.5}
-				showsButtons={false}
-				showsPagination={false}
-				containerStyle={{
-					marginBottom: 40,
-					width: "100%",
-					height: SCREEN_HEIGHT / 4,
-				}}
-			>
-				{nowPlaying.map((movie: Movie) => (
-					<Slide
-						key={movie.id}
-						backdropPath={movie.backdrop_path}
-						posterPath={movie.poster_path}
-						originalTitle={movie.original_title}
-						voteAverage={movie.vote_average}
-						overview={movie.overview}
-					/>
-				))}
-			</Swiper>
-			<ListContainer>
-				<ListTitle>Trending Movies</ListTitle>
-				<TrendingScroll
-					contentContainerStyle={{ paddingLeft: 30 }}
-					horizontal
-					showsHorizontalScrollIndicator={false}
-				>
-					{trending.map((movie: Movie) => (
-						<VMedia
-							key={movie.id}
-							posterPath={movie.poster_path}
-							originalTitle={movie.original_title}
-							voteAverage={movie.vote_average}
+		<FlatList
+			style={{
+				backgroundColor: "black",
+			}}
+			onRefresh={onRefresh}
+			refreshing={refreshing}
+			ListHeaderComponent={
+				<>
+					<Swiper
+						horizontal
+						loop
+						autoplay
+						autoplayTimeout={3.5}
+						showsButtons={false}
+						showsPagination={false}
+						containerStyle={{
+							marginBottom: 40,
+							width: "100%",
+							height: SCREEN_HEIGHT / 4,
+						}}
+					>
+						{nowPlaying.map((movie: Movie) => (
+							<Slide
+								key={movie.id}
+								backdropPath={movie.backdrop_path}
+								posterPath={movie.poster_path}
+								originalTitle={movie.original_title}
+								voteAverage={movie.vote_average}
+								overview={movie.overview}
+							/>
+						))}
+					</Swiper>
+					<ListContainer>
+						<ListTitle>Trending Movies</ListTitle>
+						<TrendingScroll
+							contentContainerStyle={{ paddingHorizontal: 30 }}
+							data={trending}
+							horizontal
+							ItemSeparatorComponent={() => (
+								<View style={{ width: 30 }} />
+							)}
+							keyExtractor={(item: Movie) => item.id + ""}
+							renderItem={({ item }) => (
+								<VMedia
+									posterPath={item.poster_path}
+									originalTitle={item.original_title}
+									voteAverage={item.vote_average}
+								/>
+							)}
+							showsHorizontalScrollIndicator={false}
 						/>
-					))}
-				</TrendingScroll>
-			</ListContainer>
-			<ComingSoonTitle>Coming soon</ComingSoonTitle>
-			{upcoming.map((movie: Movie) => (
+					</ListContainer>
+					<ComingSoonTitle>Coming soon</ComingSoonTitle>
+				</>
+			}
+			data={upcoming}
+			keyExtractor={(item: Movie) => item.id + ""}
+			ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+			renderItem={({ item }) => (
 				<HMedia
-					key={movie.id}
-					posterPath={movie.poster_path}
-					originalTitle={movie.original_title}
-					overview={movie.overview}
-					releaseDate={movie.release_date}
+					posterPath={item.poster_path}
+					originalTitle={item.original_title}
+					overview={item.overview}
+					releaseDate={item.release_date}
 				/>
-			))}
-		</Container>
+			)}
+		/>
 	);
 };
 export default Movies;
