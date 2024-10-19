@@ -10,9 +10,9 @@ import { makeImgPath } from "../utils";
 const BgImg = styled.Image``;
 
 const Title = styled.Text<{ isDark: boolean }>`
+	color: ${(props: any) => (props.isDark ? "white" : props.theme.textColor)};
 	font-size: 16px;
 	font-weight: 600;
-	color: ${(props: any) => (props.isDark ? "white" : props.theme.textColor)};
 `;
 const Wrapper = styled.View`
 	flex-direction: row;
@@ -26,11 +26,12 @@ const Column = styled.View`
 	width: 60%;
 `;
 const Overview = styled.Text<{ isDark: boolean }>`
-	margin-top: 10px;
 	color: ${(props: any) =>
 		props.isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.8)"};
+	margin-top: 10px;
 `;
 const Votes = styled(Overview)`
+	color: ${(props: any) => (props.isDark ? "white" : props.theme.textColor)};
 	font-size: 12px;
 `;
 
@@ -50,6 +51,7 @@ const Slide: React.FC<SlideProps> = ({
 	overview,
 }) => {
 	const isDark = useColorScheme() === "dark";
+
 	return (
 		<View style={{ flex: 1 }}>
 			<BgImg

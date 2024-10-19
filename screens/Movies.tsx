@@ -1,114 +1,88 @@
-import React, { useEffect, useState } from "react";
-import {
-	ActivityIndicator,
-	Dimensions,
-	FlatList,
-	View,
-	Text,
-} from "react-native";
+import React from "react";
+import { Dimensions, FlatList, useColorScheme, View } from "react-native";
 import Swiper from "react-native-swiper";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import styled from "styled-components/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { MovieResponse, moviesApi } from "../api";
 import HMedia from "../components/HMedia";
+import Loader from "../components/Loader";
 import Slide from "../components/Slide";
 import VMedia from "../components/VMedia";
 
-const API_KEY = process.env.API_KEY;
+const ListContainer = styled.View`
+	margin-bottom: 40px;
+	background-color: ${(props: any) => (props.isDark ? "black" : "white")};
+`;
 
-const Loader = styled.View`
-	flex: 1;
-	justify-content: center;
-	align-items: center;
+const ListTitle = styled.Text`
+	margin-left: 30px;
+	color: ${(props: any) => (props.isDark ? "white" : props.theme.textColor)};
+	font-size: 18px;
+	font-weight: 600;
+`;
+const ComingSoonTitle = styled(ListTitle)`
+	margin-bottom: 20px;
+	color: ${(props: any) => (props.isDark ? "white" : props.theme.textColor)};
+`;
+
+const VSeparator = styled.View`
+	width: 20px;
+	background-color: ${(props: any) => (props.isDark ? "black" : "white")};
+`;
+const HSeparator = styled.View`
+	height: 20px;
+	background-color: ${(props: any) => (props.isDark ? "black" : "white")};
 `;
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-const ListTitle = styled.Text`
-	color: white;
-	font-size: 18px;
-	font-weight: 600;
-	margin-left: 30px;
-`;
-
-const TrendingScroll = styled.FlatList`
-	margin-top: 20px;
-`;
-
-const ListContainer = styled.View`
-	margin-bottom: 40px;
-`;
-
-const ComingSoonTitle = styled(ListTitle)`
-	margin-bottom: 20px;
-`;
-
-interface Movie {
-	id: number;
-	backdrop_path: string;
-	poster_path: string;
-	original_title: string;
-	vote_average: number;
-	overview: string;
-	release_date: string;
-}
-
 const Movies: React.FC<NativeStackScreenProps<any, "Movies">> = () => {
-	const [refreshing, setRefreshing] = useState(false);
-	const [loading, setLoading] = useState(true);
-	const [nowPlaying, setNowPlaying] = useState([]);
-	const [upcoming, setUpcoming] = useState([]);
-	const [trending, setTrending] = useState([]);
+	const isDark = useColorScheme() === "dark";
 
-	const getTrending = async () => {
-		const { results } = await (
-			await fetch(
-				`https://api.themoviedb.org/3/trending/movie/week?api_key=${API_KEY}`
-			)
-		).json();
-		setTrending(results);
-	};
+	const {
+		isLoading: nowPlayingLoading,
+		data: nowPlayingData,
+		isRefetching: nowPlayingRefetching,
+	} = useQuery<MovieResponse>({
+		queryKey: ["movies", "nowPlaying"],
+		queryFn: moviesApi.nowPlaying,
+	});
 
-	const getUpcoming = async () => {
-		const { results } = await (
-			await fetch(
-				`https://api.themoviedb.org/3/movie/upcoming?api_key=${API_KEY}&language=en-US&page=1`
-			)
-		).json();
-		setUpcoming(results);
-	};
+	const {
+		isLoading: upcomingLoading,
+		data: upcomingData,
+		isRefetching: upcomingRefetching,
+	} = useQuery<MovieResponse>({
+		queryKey: ["movies", "upcoming"],
+		queryFn: moviesApi.upcoming,
+	});
 
-	const getNowPlaying = async () => {
-		const { results } = await (
-			await fetch(
-				`https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}&language=en-US&page=1`
-			)
-		).json();
-		setNowPlaying(results);
-	};
+	const {
+		isLoading: trendingLoading,
+		data: trendingData,
+		isRefetching: trendingRefetching,
+	} = useQuery<MovieResponse>({
+		queryKey: ["movies", "trending"],
+		queryFn: moviesApi.trending,
+	});
 
-	const getData = async () => {
-		await Promise.all([getTrending(), getUpcoming(), getNowPlaying()]);
-		setLoading(false);
-	};
-	useEffect(() => {
-		getData();
-	}, []);
-
+	const queryClient = useQueryClient();
 	const onRefresh = async () => {
-		setRefreshing(true);
-		await getData();
-		setRefreshing(false);
+		queryClient.refetchQueries({ queryKey: ["movies"] });
 	};
+
+	const loading = nowPlayingLoading || upcomingLoading || trendingLoading;
+	const refreshing =
+		nowPlayingRefetching || upcomingRefetching || trendingRefetching;
 
 	return loading ? (
-		<Loader>
-			<ActivityIndicator />
-		</Loader>
-	) : (
+		<Loader />
+	) : upcomingData ? (
 		<FlatList
 			style={{
-				backgroundColor: "black",
+				backgroundColor: isDark ? "black" : "white",
 			}}
 			onRefresh={onRefresh}
 			refreshing={refreshing}
@@ -127,52 +101,62 @@ const Movies: React.FC<NativeStackScreenProps<any, "Movies">> = () => {
 							height: SCREEN_HEIGHT / 4,
 						}}
 					>
-						{nowPlaying.map((movie: Movie) => (
+						{nowPlayingData?.results.map((movie) => (
 							<Slide
 								key={movie.id}
-								backdropPath={movie.backdrop_path}
-								posterPath={movie.poster_path}
+								backdropPath={movie.backdrop_path || ""}
+								posterPath={movie.poster_path || ""}
 								originalTitle={movie.original_title}
 								voteAverage={movie.vote_average}
 								overview={movie.overview}
 							/>
 						))}
 					</Swiper>
-					<ListContainer>
-						<ListTitle>Trending Movies</ListTitle>
-						<TrendingScroll
-							contentContainerStyle={{ paddingHorizontal: 30 }}
-							data={trending}
-							horizontal
-							ItemSeparatorComponent={() => (
-								<View style={{ width: 30 }} />
-							)}
-							keyExtractor={(item: Movie) => item.id + ""}
-							renderItem={({ item }) => (
-								<VMedia
-									posterPath={item.poster_path}
-									originalTitle={item.original_title}
-									voteAverage={item.vote_average}
-								/>
-							)}
-							showsHorizontalScrollIndicator={false}
-						/>
+					<ListContainer isDark={isDark}>
+						<ListTitle isDark={isDark}>Trending Movies</ListTitle>
+						{trendingData ? (
+							<FlatList
+								style={{
+									marginTop: 20,
+									backgroundColor: isDark ? "black" : "white",
+								}}
+								horizontal
+								data={trendingData.results}
+								keyExtractor={(item) => item.id + ""}
+								showsHorizontalScrollIndicator={false}
+								contentContainerStyle={{
+									paddingHorizontal: 30,
+								}}
+								ItemSeparatorComponent={() => (
+									<VSeparator isDark={isDark} />
+								)}
+								renderItem={({ item }) => (
+									<VMedia
+										posterPath={item.poster_path || ""}
+										originalTitle={item.original_title}
+										voteAverage={item.vote_average}
+									/>
+								)}
+							/>
+						) : null}
 					</ListContainer>
-					<ComingSoonTitle>Coming soon</ComingSoonTitle>
+					<ComingSoonTitle isDark={isDark}>
+						Coming soon
+					</ComingSoonTitle>
 				</>
 			}
-			data={upcoming}
-			keyExtractor={(item: Movie) => item.id + ""}
-			ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+			data={upcomingData.results}
+			keyExtractor={(item) => item.id + ""}
+			ItemSeparatorComponent={() => <HSeparator isDark={isDark} />}
 			renderItem={({ item }) => (
 				<HMedia
-					posterPath={item.poster_path}
+					posterPath={item.poster_path || ""}
 					originalTitle={item.original_title}
 					overview={item.overview}
 					releaseDate={item.release_date}
 				/>
 			)}
 		/>
-	);
+	) : null;
 };
 export default Movies;
