@@ -6,15 +6,10 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { MovieResponse, moviesApi } from "../api";
+import HList from "../components/HList";
 import HMedia from "../components/HMedia";
 import Loader from "../components/Loader";
 import Slide from "../components/Slide";
-import VMedia from "../components/VMedia";
-
-const ListContainer = styled.View`
-	margin-bottom: 40px;
-	background-color: ${(props: any) => (props.isDark ? "black" : "white")};
-`;
 
 const ListTitle = styled.Text`
 	margin-left: 30px;
@@ -27,10 +22,6 @@ const ComingSoonTitle = styled(ListTitle)`
 	color: ${(props: any) => (props.isDark ? "white" : props.theme.textColor)};
 `;
 
-const VSeparator = styled.View`
-	width: 20px;
-	background-color: ${(props: any) => (props.isDark ? "black" : "white")};
-`;
 const HSeparator = styled.View`
 	height: 20px;
 	background-color: ${(props: any) => (props.isDark ? "black" : "white")};
@@ -112,34 +103,14 @@ const Movies: React.FC<NativeStackScreenProps<any, "Movies">> = () => {
 							/>
 						))}
 					</Swiper>
-					<ListContainer isDark={isDark}>
-						<ListTitle isDark={isDark}>Trending Movies</ListTitle>
-						{trendingData ? (
-							<FlatList
-								style={{
-									marginTop: 20,
-									backgroundColor: isDark ? "black" : "white",
-								}}
-								horizontal
-								data={trendingData.results}
-								keyExtractor={(item) => item.id + ""}
-								showsHorizontalScrollIndicator={false}
-								contentContainerStyle={{
-									paddingHorizontal: 30,
-								}}
-								ItemSeparatorComponent={() => (
-									<VSeparator isDark={isDark} />
-								)}
-								renderItem={({ item }) => (
-									<VMedia
-										posterPath={item.poster_path || ""}
-										originalTitle={item.original_title}
-										voteAverage={item.vote_average}
-									/>
-								)}
-							/>
-						) : null}
-					</ListContainer>
+
+					{trendingData ? (
+						<HList
+							title="Trending Movies"
+							data={trendingData.results}
+						/>
+					) : null}
+
 					<ComingSoonTitle isDark={isDark}>
 						Coming soon
 					</ComingSoonTitle>

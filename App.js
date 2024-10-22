@@ -3,9 +3,9 @@ import { ThemeProvider } from "styled-components/native";
 import { NavigationContainer } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import Root from "./navigation/Root";
 import { darkTheme, lightTheme } from "./styled";
 import Preload from "./Preload";
+import Root from "./navigation/Root";
 
 export default function App() {
 	Preload();
