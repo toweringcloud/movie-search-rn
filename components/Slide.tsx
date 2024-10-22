@@ -1,11 +1,17 @@
-import React from "react";
-import { StyleSheet, useColorScheme, View } from "react-native";
-import styled from "styled-components/native";
-
 import { BlurView } from "expo-blur";
+import React from "react";
+import {
+	StyleSheet,
+	TouchableOpacity,
+	useColorScheme,
+	View,
+} from "react-native";
+import styled from "styled-components/native";
+import { useNavigation } from "@react-navigation/native";
 
 import Poster from "./Poster";
 import { makeImgPath } from "../utils";
+import { StackNavigationProp } from "../types";
 
 const BgImg = styled.Image``;
 
@@ -51,32 +57,40 @@ const Slide: React.FC<SlideProps> = ({
 	overview,
 }) => {
 	const isDark = useColorScheme() === "dark";
+	const navigation = useNavigation<StackNavigationProp>();
+	const goToDetail = () => {
+		navigation.navigate("Stack", { screen: "Detail" });
+	};
 
 	return (
-		<View style={{ flex: 1 }}>
-			<BgImg
-				style={StyleSheet.absoluteFill}
-				source={{ uri: makeImgPath(backdropPath) }}
-			/>
-			<BlurView
-				tint={isDark ? "dark" : "light"}
-				intensity={85}
-				style={StyleSheet.absoluteFill}
-			>
-				<Wrapper>
-					<Poster path={posterPath} />
-					<Column>
-						<Title isDark={isDark}>{originalTitle}</Title>
-						{voteAverage > 0 ? (
-							<Votes isDark={isDark}>⭐️ {voteAverage}/10</Votes>
-						) : null}
-						<Overview isDark={isDark}>
-							{overview.slice(0, 100)}...
-						</Overview>
-					</Column>
-				</Wrapper>
-			</BlurView>
-		</View>
+		<TouchableOpacity onPress={goToDetail}>
+			<View style={{ flex: 1 }}>
+				<BgImg
+					style={StyleSheet.absoluteFill}
+					source={{ uri: makeImgPath(backdropPath) }}
+				/>
+				<BlurView
+					tint={isDark ? "dark" : "light"}
+					intensity={85}
+					style={StyleSheet.absoluteFill}
+				>
+					<Wrapper>
+						<Poster path={posterPath} />
+						<Column>
+							<Title isDark={isDark}>{originalTitle}</Title>
+							{voteAverage > 0 ? (
+								<Votes isDark={isDark}>
+									⭐️ {voteAverage}/10
+								</Votes>
+							) : null}
+							<Overview isDark={isDark}>
+								{overview.slice(0, 100)}...
+							</Overview>
+						</Column>
+					</Wrapper>
+				</BlurView>
+			</View>
+		</TouchableOpacity>
 	);
 };
 export default Slide;
