@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dimensions, FlatList, useColorScheme, View } from "react-native";
 import Swiper from "react-native-swiper";
 import styled from "styled-components/native";
@@ -30,47 +30,38 @@ const HSeparator = styled.View`
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const Movies: React.FC<NativeStackScreenProps<any, "Movies">> = () => {
+	const [refreshing, setRefreshing] = useState(false);
 	const isDark = useColorScheme() === "dark";
 
-	const {
-		isLoading: nowPlayingLoading,
-		data: nowPlayingData,
-		isRefetching: nowPlayingRefetching,
-	} = useQuery<MovieResponse>({
-		queryKey: ["movies", "nowPlaying"],
-		queryFn: moviesApi.nowPlaying,
-	});
+	const { isLoading: nowPlayingLoading, data: nowPlayingData } =
+		useQuery<MovieResponse>({
+			queryKey: ["movies", "nowPlaying"],
+			queryFn: moviesApi.nowPlaying,
+		});
 
-	const {
-		isLoading: upcomingLoading,
-		data: upcomingData,
-		isRefetching: upcomingRefetching,
-	} = useQuery<MovieResponse>({
-		queryKey: ["movies", "upcoming"],
-		queryFn: moviesApi.upcoming,
-	});
+	const { isLoading: upcomingLoading, data: upcomingData } =
+		useQuery<MovieResponse>({
+			queryKey: ["movies", "upcoming"],
+			queryFn: moviesApi.upcoming,
+		});
 
-	const {
-		isLoading: trendingLoading,
-		data: trendingData,
-		isRefetching: trendingRefetching,
-	} = useQuery<MovieResponse>({
-		queryKey: ["movies", "trending"],
-		queryFn: moviesApi.trending,
-	});
+	const { isLoading: trendingLoading, data: trendingData } =
+		useQuery<MovieResponse>({
+			queryKey: ["movies", "trending"],
+			queryFn: moviesApi.trending,
+		});
 
 	const queryClient = useQueryClient();
 	const onRefresh = async () => {
-		queryClient.refetchQueries({ queryKey: ["movies"] });
+		setRefreshing(true);
+		await queryClient.refetchQueries({ queryKey: ["movies"] });
+		setRefreshing(false);
 	};
 
 	const loading = nowPlayingLoading || upcomingLoading || trendingLoading;
-	const refreshing =
-		nowPlayingRefetching || upcomingRefetching || trendingRefetching;
+	if (loading) return <Loader />;
 
-	return loading ? (
-		<Loader />
-	) : upcomingData ? (
+	return upcomingData ? (
 		<FlatList
 			style={{
 				backgroundColor: isDark ? "black" : "white",

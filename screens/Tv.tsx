@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { RefreshControl, useColorScheme } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,33 +8,33 @@ import HList from "../components/HList";
 import Loader from "../components/Loader";
 
 const Tv = () => {
-	const {
-		isLoading: todayLoading,
-		data: todayData,
-		isRefetching: todayRefetching,
-	} = useQuery({ queryKey: ["tv", "today"], queryFn: tvApi.airingToday });
+	const [refreshing, setRefreshing] = useState(false);
 
-	const {
-		isLoading: topLoading,
-		data: topData,
-		isRefetching: topRefetching,
-	} = useQuery({ queryKey: ["tv", "top"], queryFn: tvApi.topRated });
+	const { isLoading: todayLoading, data: todayData } = useQuery({
+		queryKey: ["tv", "today"],
+		queryFn: tvApi.airingToday,
+	});
 
-	const {
-		isLoading: trendingLoading,
-		data: trendingData,
-		isRefetching: trendingRefetching,
-	} = useQuery({ queryKey: ["tv", "trending"], queryFn: tvApi.trending });
+	const { isLoading: topLoading, data: topData } = useQuery({
+		queryKey: ["tv", "top"],
+		queryFn: tvApi.topRated,
+	});
+
+	const { isLoading: trendingLoading, data: trendingData } = useQuery({
+		queryKey: ["tv", "trending"],
+		queryFn: tvApi.trending,
+	});
 
 	const queryClient = useQueryClient();
 	const onRefresh = async () => {
-		queryClient.refetchQueries({ queryKey: ["tv"] });
+		setRefreshing(true);
+		await queryClient.refetchQueries({ queryKey: ["tv"] });
+		setRefreshing(false);
 	};
 
 	const loading = todayLoading || topLoading || trendingLoading;
-	const refreshing = todayRefetching || topRefetching || trendingRefetching;
-
 	if (loading) return <Loader />;
+
 	return (
 		<ScrollView
 			refreshControl={
